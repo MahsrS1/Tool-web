@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Image Compressor Tool</title>
+  <style>
+    :root {
+      --blue: #2196f3;
+      --white: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: var(--white);
+      color: #333;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: var(--blue);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .container {
+      background: #f0f8ff;
+      border-radius: 15px;
+      padding: 20px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .preview {
+      margin-top: 15px;
+      width: 100%;
+      max-height: 300px;
+      object-fit: contain;
+      border: 2px dashed var(--blue);
+      border-radius: 10px;
+    }
+
+    .btn {
+      display: inline-block;
+      margin: 10px 5px;
+      padding: 12px 20px;
+      font-size: 16px;
+      color: var(--blue);
+      background-color: var(--white);
+      border: 2px solid var(--blue);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .btn:hover {
+      background-color: var(--blue);
+      color: var(--white);
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    input[type="file"] {
+      margin: 10px 0;
+    }
+
+    @media screen and (max-width: 600px) {
+      .btn {
+        width: 100%;
+        margin: 8px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Image Compressor</h1>
+  <div class="container">
+    <input type="file" id="imageInput" accept="image/*">
+    <img id="preview" class="preview" src="" alt="Preview will appear here">
+    <div>
+      <button class="btn" onclick="compressImage()">Compress</button>
+      <a id="downloadLink" class="btn" style="display: none;">Download</a>
+    </div>
+  </div>
+
+  <script>
+    const imageInput = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+    const downloadLink = document.getElementById("downloadLink");
+    let originalImage;
+
+    imageInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        originalImage = new Image();
+        originalImage.src = event.target.result;
+        originalImage.onload = function () {
+          preview.src = originalImage.src;
+        };
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function compressImage() {
+      if (!originalImage) return alert("Please upload an image first.");
+
+      const canvas = document.createElement("canvas");
+      const maxWidth = 800;
+      const scaleSize = maxWidth / originalImage.width;
+      canvas.width = maxWidth;
+      canvas.height = originalImage.height * scaleSize;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+
+      // Compress to 70% quality
+      const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.7);
+
+      preview.src = compressedDataUrl;
+
+      // Enable download
+      downloadLink.href = compressedDataUrl;
+      downloadLink.download = "compressed-image.jpg";
+      downloadLink.style.display = "inline-block";
+    }
+  </script>
+</body>
+</html>
