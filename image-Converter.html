@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Image Converter Tool</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f8ff;
+      color: #222;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 500px;
+      width: 90%;
+      background: white;
+      padding: 20px;
+      margin-top: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 128, 255, 0.2);
+    }
+
+    h2 {
+      color: #007BFF;
+      text-align: center;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .upload-btn {
+      background-color: #007BFF;
+      color: white;
+      padding: 10px 18px;
+      border: 2px solid #007BFF;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-bottom: 15px;
+      transition: 0.3s;
+    }
+
+    .upload-btn:hover {
+      background-color: #0056b3;
+    }
+
+    .preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .preview img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: 2px solid #007BFF;
+      margin-bottom: 20px;
+    }
+
+    .convert-btn {
+      background-color: white;
+      color: #007BFF;
+      padding: 10px 18px;
+      border: 2px solid #007BFF;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .convert-btn:hover {
+      background-color: #007BFF;
+      color: white;
+    }
+
+    @media screen and (max-width: 600px) {
+      .container {
+        margin: 20px;
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Image Converter Tool</h2>
+    <div class="preview" id="previewContainer">
+      <label for="imageUpload" class="upload-btn">Choose Image</label>
+      <input type="file" id="imageUpload" accept="image/*">
+      <img id="previewImage" src="" alt="" style="display:none;">
+    </div>
+    <select id="formatSelect">
+      <option value="jpeg">Convert to JPG</option>
+      <option value="png">Convert to PNG</option>
+      <option value="webp">Convert to WEBP</option>
+    </select>
+    <button class="convert-btn" onclick="convertImage()">Convert & Download</button>
+  </div>
+
+  <script>
+    const imageInput = document.getElementById('imageUpload');
+    const previewImage = document.getElementById('previewImage');
+
+    imageInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          previewImage.src = e.target.result;
+          previewImage.style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function convertImage() {
+      const format = document.getElementById('formatSelect').value;
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      img.onload = function () {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+
+        let mimeType = '';
+        switch (format) {
+          case 'jpeg': mimeType = 'image/jpeg'; break;
+          case 'png': mimeType = 'image/png'; break;
+          case 'webp': mimeType = 'image/webp'; break;
+        }
+
+        canvas.toBlob(function (blob) {
+          const link = document.createElement('a');
+          link.download = `converted-image.${format}`;
+          link.href = URL.createObjectURL(blob);
+          link.click();
+        }, mimeType, 0.9);
+      };
+
+      if (previewImage.src) {
+        img.src = previewImage.src;
+      } else {
+        alert('Please upload an image first.');
+      }
+    }
+  </script>
+</body>
+</html>
