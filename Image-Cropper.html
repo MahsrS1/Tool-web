@@ -6,174 +6,136 @@
   <title>Image Cropper Tool</title>
   <style>
     :root {
-      --blue: #2196f3;
-      --white: #ffffff;
+      --primary: #007BFF;
+      --background: #ffffff;
+      --button-hover: #0056b3;
     }
 
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: "Segoe UI", sans-serif;
     }
 
     body {
-      background: var(--white);
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--background);
       color: #333;
-      padding: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding: 1rem;
     }
 
     h1 {
-      color: var(--blue);
-      margin-bottom: 20px;
+      color: var(--primary);
       text-align: center;
+      margin-bottom: 1rem;
     }
 
     .container {
-      background: #f0f8ff;
-      border-radius: 15px;
-      padding: 20px;
-      width: 100%;
       max-width: 500px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      background: #f9f9f9;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
 
-    .preview {
-      margin-top: 15px;
+    input[type="file"], input[type="number"] {
       width: 100%;
-      max-height: 300px;
-      object-fit: contain;
-      border: 2px dashed var(--blue);
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    canvas {
+      display: block;
+      margin: 1rem auto;
+      max-width: 100%;
+      border: 2px dashed var(--primary);
       border-radius: 10px;
     }
 
     .btn {
       display: inline-block;
-      margin: 10px 5px;
-      padding: 12px 20px;
-      font-size: 16px;
-      color: var(--blue);
-      background-color: var(--white);
-      border: 2px solid var(--blue);
-      border-radius: 8px;
+      background-color: var(--primary);
+      color: #fff;
+      padding: 0.7rem 1.5rem;
+      margin: 0.5rem 0;
+      border: 2px solid var(--primary);
+      border-radius: 50px;
+      text-align: center;
       cursor: pointer;
       transition: all 0.3s ease;
-      text-align: center;
-    }
-
-    .btn:hover {
-      background-color: var(--blue);
-      color: var(--white);
-    }
-
-    .btn:active {
-      transform: scale(0.95);
-    }
-
-    input[type="file"], input[type="number"] {
-      margin: 10px 0;
       width: 100%;
-      padding: 8px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-
-    label {
-      margin-top: 10px;
-      display: block;
-      color: var(--blue);
       font-weight: bold;
     }
 
-    @media screen and (max-width: 600px) {
-      .btn {
-        width: 100%;
-        margin: 8px 0;
+    .btn:hover {
+      background-color: var(--button-hover);
+      transform: scale(1.03);
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 0.8rem;
       }
     }
   </style>
 </head>
 <body>
-  <h1>Image Cropper</h1>
+  <h1>Image Cropper Tool</h1>
   <div class="container">
-    <input type="file" id="imageInput" accept="image/*" />
-
-    <label for="cropX">X (Start):</label>
-    <input type="number" id="cropX" placeholder="e.g., 50" />
-
-    <label for="cropY">Y (Start):</label>
-    <input type="number" id="cropY" placeholder="e.g., 50" />
-
-    <label for="cropWidth">Crop Width (px):</label>
-    <input type="number" id="cropWidth" placeholder="e.g., 200" />
-
-    <label for="cropHeight">Crop Height (px):</label>
-    <input type="number" id="cropHeight" placeholder="e.g., 200" />
-
-    <img id="preview" class="preview" src="" alt="Preview will appear here" />
-
-    <div>
-      <button class="btn" onclick="cropImage()">Crop</button>
-      <a id="downloadLink" class="btn" style="display: none;">Download</a>
-    </div>
+    <input type="file" id="upload" accept="image/*" />
+    <input type="number" id="cropWidth" placeholder="Crop Width (px)" />
+    <input type="number" id="cropHeight" placeholder="Crop Height (px)" />
+    <button class="btn" onclick="cropImage()">Crop & Preview</button>
+    <canvas id="previewCanvas"></canvas>
+    <a id="downloadLink" class="btn" style="display:none;" download="cropped-image.png">Download Cropped Image</a>
   </div>
 
   <script>
-    const imageInput = document.getElementById("imageInput");
-    const preview = document.getElementById("preview");
-    const cropX = document.getElementById("cropX");
-    const cropY = document.getElementById("cropY");
-    const cropWidth = document.getElementById("cropWidth");
-    const cropHeight = document.getElementById("cropHeight");
-    const downloadLink = document.getElementById("downloadLink");
+    let originalImage = new Image();
+    let imageLoaded = false;
 
-    let originalImage;
-
-    imageInput.addEventListener("change", (e) => {
+    document.getElementById('upload').addEventListener('change', function (e) {
       const file = e.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function (event) {
-        originalImage = new Image();
-        originalImage.src = event.target.result;
-        originalImage.onload = function () {
-          preview.src = originalImage.src;
-          cropX.value = 0;
-          cropY.value = 0;
-          cropWidth.value = originalImage.width;
-          cropHeight.value = originalImage.height;
+        originalImage.onload = () => {
+          imageLoaded = true;
         };
+        originalImage.src = event.target.result;
       };
       reader.readAsDataURL(file);
     });
 
     function cropImage() {
-      const x = parseInt(cropX.value);
-      const y = parseInt(cropY.value);
-      const width = parseInt(cropWidth.value);
-      const height = parseInt(cropHeight.value);
-
-      if (!originalImage || isNaN(x) || isNaN(y) || isNaN(width) || isNaN(height)) {
-        alert("Please upload an image and enter valid crop values.");
+      if (!imageLoaded) {
+        alert("Please upload an image first.");
         return;
       }
 
-      const canvas = document.createElement("canvas");
+      const width = parseInt(document.getElementById('cropWidth').value);
+      const height = parseInt(document.getElementById('cropHeight').value);
+      if (!width || !height || width <= 0 || height <= 0) {
+        alert("Enter valid crop dimensions.");
+        return;
+      }
+
+      const canvas = document.getElementById('previewCanvas');
+      const ctx = canvas.getContext('2d');
       canvas.width = width;
       canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(originalImage, x, y, width, height, 0, 0, width, height);
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(originalImage, 0, 0, width, height);
 
-      const croppedDataUrl = canvas.toDataURL("image/jpeg", 0.9);
-      preview.src = croppedDataUrl;
-
-      downloadLink.href = croppedDataUrl;
-      downloadLink.download = "cropped-image.jpg";
-      downloadLink.style.display = "inline-block";
+      // Show download link
+      const downloadLink = document.getElementById('downloadLink');
+      downloadLink.href = canvas.toDataURL();
+      downloadLink.style.display = 'block';
     }
   </script>
 </body>
