@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Image Resizer Tool</title>
+  <style>
+    :root {
+      --blue: #2196f3;
+      --white: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: var(--white);
+      color: #333;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: var(--blue);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .container {
+      background: #f0f8ff;
+      border-radius: 15px;
+      padding: 20px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .preview {
+      margin-top: 15px;
+      width: 100%;
+      max-height: 300px;
+      object-fit: contain;
+      border: 2px dashed var(--blue);
+      border-radius: 10px;
+    }
+
+    .btn {
+      display: inline-block;
+      margin: 10px 5px;
+      padding: 12px 20px;
+      font-size: 16px;
+      color: var(--blue);
+      background-color: var(--white);
+      border: 2px solid var(--blue);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .btn:hover {
+      background-color: var(--blue);
+      color: var(--white);
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    input[type="file"], input[type="number"] {
+      margin: 10px 0;
+      width: 100%;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    label {
+      margin-top: 10px;
+      display: block;
+      color: var(--blue);
+      font-weight: bold;
+    }
+
+    @media screen and (max-width: 600px) {
+      .btn {
+        width: 100%;
+        margin: 8px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Image Resizer</h1>
+  <div class="container">
+    <input type="file" id="imageInput" accept="image/*">
+    
+    <label for="widthInput">Width (px):</label>
+    <input type="number" id="widthInput" placeholder="e.g., 300">
+    
+    <label for="heightInput">Height (px):</label>
+    <input type="number" id="heightInput" placeholder="e.g., 200">
+    
+    <img id="preview" class="preview" src="" alt="Preview will appear here">
+    
+    <div>
+      <button class="btn" onclick="resizeImage()">Resize</button>
+      <a id="downloadLink" class="btn" style="display: none;">Download</a>
+    </div>
+  </div>
+
+  <script>
+    const imageInput = document.getElementById("imageInput");
+    const widthInput = document.getElementById("widthInput");
+    const heightInput = document.getElementById("heightInput");
+    const preview = document.getElementById("preview");
+    const downloadLink = document.getElementById("downloadLink");
+
+    let originalImage;
+
+    imageInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        originalImage = new Image();
+        originalImage.src = event.target.result;
+        originalImage.onload = function () {
+          preview.src = originalImage.src;
+          widthInput.value = originalImage.width;
+          heightInput.value = originalImage.height;
+        };
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function resizeImage() {
+      const width = parseInt(widthInput.value);
+      const height = parseInt(heightInput.value);
+
+      if (!originalImage || isNaN(width) || isNaN(height)) {
+        alert("Please upload an image and enter valid dimensions.");
+        return;
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(originalImage, 0, 0, width, height);
+
+      const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.9);
+      preview.src = resizedDataUrl;
+
+      downloadLink.href = resizedDataUrl;
+      downloadLink.download = "resized-image.jpg";
+      downloadLink.style.display = "inline-block";
+    }
+  </script>
+</body>
+</html>
