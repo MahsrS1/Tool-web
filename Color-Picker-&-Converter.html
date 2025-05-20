@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Color Picker & Converter</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f9ff;
+      padding: 20px;
+      color: #222;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #007BFF;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input[type="color"], input[type="file"], select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 2px solid #007BFF;
+      border-radius: 8px;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: transparent;
+      color: #007BFF;
+      border: 2px solid #007BFF;
+      font-weight: bold;
+      font-size: 16px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .btn:hover {
+      background: #007BFF;
+      color: #fff;
+      transform: scale(1.05);
+    }
+    .btn:active {
+      transform: scale(0.95);
+    }
+    .output {
+      margin-top: 15px;
+      background: #e0f0ff;
+      padding: 15px;
+      border-radius: 10px;
+      font-family: monospace;
+    }
+    #preview {
+      width: 100%;
+      max-height: 300px;
+      margin-top: 10px;
+      border-radius: 10px;
+      object-fit: contain;
+      display: none;
+    }
+    @media(max-width: 600px) {
+      .container { padding: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Color Picker & Converter</h2>
+    <input type="color" id="colorPicker" value="#007bff" />
+    <div class="output" id="colorValues"></div>
+
+    <h2>Pick Color from Image</h2>
+    <input type="file" id="imageInput" accept="image/*" />
+    <canvas id="canvas" class="hidden"></canvas>
+    <img id="preview" alt="Uploaded Image" />
+    <select id="formatSelect">
+      <option value="image/jpeg">JPEG</option>
+      <option value="image/png">PNG</option>
+      <option value="image/webp">WebP</option>
+    </select>
+    <button class="btn" onclick="downloadCompressed()">Download Compressed</button>
+  </div>
+
+  <script>
+    const colorPicker = document.getElementById("colorPicker");
+    const colorValues = document.getElementById("colorValues");
+
+    function updateColorValues(color) {
+      const hex = color.toUpperCase();
+      const rgb = hexToRgb(hex);
+      const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+      colorValues.innerHTML = `
+        <strong>HEX:</strong> ${hex}<br/>
+        <strong>RGB:</strong> rgb(${rgb.r}, ${rgb.g}, ${rgb.b})<br/>
+        <strong>HSL:</strong> hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)
+      `;
+    }
+
+    function hexToRgb(hex) {
+      const bigint = parseInt(hex.replace("#", ""), 16);
+      return {
+        r: (bigint >> 16) & 255,
+        g: (bigint >> 8) & 255,
+        b: bigint & 255,
+      };
+    }
+
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      let max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if (max == min) {
+        h = s = 0;
+      } else {
+        let d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch(max){
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h *= 60;
+      }
+      return {
+        h: Math.round(h),
+        s: Math.round(s * 100),
+        l: Math.round(l * 100)
+      };
+    }
+
+    colorPicker.addEventListener("input", () => {
+      updateColorValues(colorPicker.value);
+    });
+
+    updateColorValues(colorPicker.value); // initialize
+
+    // Image Upload and Color Picker from image
+    const imageInput = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+    const canvas = document.getElementById("canvas");
+    let ctx, selectedImageData;
+
+    imageInput.addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file || !file.type.startsWith("image/")) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        preview.src = evt.target.result;
+        preview.style.display = "block";
+        selectedImageData = evt.target.result;
+        const img = new Image();
+        img.onload = function() {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          preview.onclick = function(event) {
+            const rect = preview.getBoundingClientRect();
+            const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
+            const y = ((event.clientY - rect.top) / rect.height) * canvas.height;
+            const pixel = ctx.getImageData(x, y, 1, 1).data;
+            const hexColor = "#" + [...pixel].slice(0,3).map(x => x.toString(16).padStart(2, '0')).join('');
+            colorPicker.value = hexColor;
+            updateColorValues(hexColor);
+          };
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function downloadCompressed() {
+      if (!selectedImageData) {
+        alert("Please upload an image first.");
+        return;
+      }
+      const format = document.getElementById("formatSelect").value;
+      const img = new Image();
+      img.onload = function() {
+        const maxWidth = 800;
+        const scale = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * scale;
+        ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL(format, 0.7);
+        const a = document.createElement("a");
+        a.href = dataUrl;
+        a.download = "compressed." + format.split("/")[1];
+        a.click();
+      };
+      img.src = selectedImageData;
+    }
+  </script>
+</body>
+</html>
