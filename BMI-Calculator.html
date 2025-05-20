@@ -1,0 +1,154 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Age Calculator Tool</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0faff;
+      color: #004c99;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }.tool-box {
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  width: 100%;
+  max-width: 400px;
+}
+
+.tool-box input, .tool-box button {
+  width: 100%;
+  font-size: 1em;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: 2px solid #00aaff;
+}
+
+.tool-box button {
+  background-color: #00aaff;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.tool-box button:hover {
+  background-color: #007acc;
+}
+
+.tool-box button:active {
+  transform: scale(0.95);
+}
+
+.result {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+input[type='file'] {
+  display: none;
+}
+
+.upload-label {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #00aaff;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.3s;
+}
+
+.upload-label:hover {
+  background-color: #007acc;
+}
+
+#preview {
+  max-width: 100%;
+  margin-top: 15px;
+  border: 2px dashed #00aaff;
+  padding: 10px;
+  border-radius: 12px;
+}
+
+#downloadBtn {
+  margin-top: 10px;
+  background-color: #00aaff;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-block;
+}
+
+  </style>
+</head>
+<body>  <div class="tool-box">
+    <h2>Age Calculator</h2>
+    <input type="date" id="dob">
+    <button onclick="calculateAge()">Calculate Age</button>
+    <div class="result" id="ageResult"></div>
+  </div>  <div class="tool-box">
+    <h2>Image Upload and Compression</h2>
+    <label class="upload-label" for="fileInput">Upload Image</label>
+    <input type="file" id="fileInput" accept="image/*">
+    <img id="preview" />
+    <a id="downloadBtn" href="#" download="compressed-image.jpg">Download Compressed</a>
+  </div>  <script>
+    function calculateAge() {
+      const dob = new Date(document.getElementById('dob').value);
+      if (!dob.getTime()) {
+        document.getElementById('ageResult').innerText = 'Please enter a valid date of birth.';
+        return;
+      }
+
+      const today = new Date();
+      let age = today.getFullYear() - dob.getFullYear();
+      const monthDiff = today.getMonth() - dob.getMonth();
+
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+        age--;
+      }
+
+      document.getElementById('ageResult').innerText = `Your age is ${age} years.`;
+    }
+
+    const fileInput = document.getElementById("fileInput");
+    const preview = document.getElementById("preview");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        preview.src = e.target.result;
+        compressImage(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function compressImage(dataURL) {
+      const img = new Image();
+      img.src = dataURL;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const scale = 0.5;
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const compressedData = canvas.toDataURL("image/jpeg", 0.6);
+        downloadBtn.href = compressedData;
+      };
+    }
+  </script></body>
+</html>
