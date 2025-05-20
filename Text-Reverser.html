@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Text Reverser Tool</title>
+  <style>
+    * {
+      margin: 0; padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background: #f5faff;
+      padding: 20px;
+      color: #222;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #007BFF;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    textarea, select, input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 16px;
+      border: 2px solid #007BFF;
+      border-radius: 8px;
+      resize: vertical;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #007BFF;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      outline: 2px solid white;
+      user-select: none;
+    }
+    .btn:hover {
+      background: #0056cc;
+      transform: scale(1.03);
+    }
+    .output {
+      margin-top: 10px;
+      color: #007BFF;
+      font-size: 16px;
+      white-space: pre-wrap;
+      min-height: 100px;
+      border: 2px solid #007BFF;
+      border-radius: 8px;
+      padding: 10px;
+      background: #e7f0ff;
+    }
+    .image-section {
+      margin-top: 30px;
+      text-align: center;
+    }
+    #preview {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .hidden {
+      display: none;
+    }
+    @media(max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Text Reverser Tool</h2>
+    <textarea id="textInput" rows="6" placeholder="Type or paste text here to reverse..."></textarea>
+    <button class="btn" onclick="reverseText()">Reverse Text</button>
+    <div id="output" class="output" aria-live="polite" aria-label="Reversed text output"></div>
+
+    <div class="image-section">
+      <h2>Upload and Compress Image</h2>
+      <input type="file" accept="image/*" id="imageInput" />
+      <select id="formatSelect">
+        <option value="image/jpeg">JPEG</option>
+        <option value="image/png">PNG</option>
+        <option value="image/webp">WebP</option>
+      </select>
+      <button class="btn" onclick="compressAndDownload()">Download Compressed Image</button>
+      <img id="preview" class="hidden" alt="Image Preview"/>
+    </div>
+  </div>
+
+  <script>
+    function reverseText() {
+      const input = document.getElementById("textInput").value;
+      // Reverse entire string including spaces and punctuation
+      const reversed = input.split('').reverse().join('');
+      document.getElementById("output").textContent = reversed;
+    }
+
+    const imageInput = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+    let selectedImage = null;
+
+    imageInput.addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (file && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = event => {
+          preview.src = event.target.result;
+          preview.classList.remove("hidden");
+          selectedImage = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function compressAndDownload() {
+      const format = document.getElementById("formatSelect").value;
+      if (!selectedImage) {
+        alert("Please upload an image first.");
+        return;
+      }
+      const img = new Image();
+      img.src = selectedImage;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const maxWidth = 800;
+        const scale = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * scale;
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const compressed = canvas.toDataURL(format, 0.7);
+
+        const link = document.createElement("a");
+        link.href = compressed;
+        link.download = "compressed-image." + format.split("/")[1];
+        link.click();
+      };
+    }
+  </script>
+</body>
+</html>
