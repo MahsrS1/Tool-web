@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PDF ↔ Word Converter</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #ffffff;
+      color: #222;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(to bottom right, #e6f0ff, #ffffff);
+    }
+
+    .container {
+      max-width: 500px;
+      width: 90%;
+      background: #ffffff;
+      border: 2px solid #007bff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 123, 255, 0.2);
+      padding: 20px;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 24px;
+      color: #007bff;
+      margin-bottom: 10px;
+    }
+
+    .toggle-switch {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .toggle-switch button {
+      background: none;
+      border: 2px solid #007bff;
+      padding: 10px 15px;
+      cursor: pointer;
+      border-radius: 10px;
+      color: #007bff;
+      margin: 0 5px;
+      transition: 0.3s;
+    }
+
+    .toggle-switch button.active,
+    .toggle-switch button:hover {
+      background: #007bff;
+      color: white;
+    }
+
+    .upload-area {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .upload-label {
+      display: inline-block;
+      padding: 10px 20px;
+      border: 2px dashed #007bff;
+      border-radius: 12px;
+      color: #007bff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .upload-label:hover {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .file-preview {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .btn {
+      background: none;
+      color: #007bff;
+      border: 2px solid #007bff;
+      padding: 10px 20px;
+      margin: 10px auto;
+      display: block;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: 0.3s ease;
+      width: 100%;
+      font-weight: bold;
+    }
+
+    .btn:hover {
+      background-color: #007bff;
+      color: white;
+      transform: scale(1.02);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+      .title {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="title">PDF ↔ Word Converter</div>
+    <div class="toggle-switch">
+      <button class="active" id="pdfToWordBtn">PDF → Word</button>
+      <button id="wordToPdfBtn">Word → PDF</button>
+    </div>
+
+    <div class="upload-area">
+      <label for="fileUpload" class="upload-label">Choose File</label>
+      <input type="file" id="fileUpload" accept=".pdf,.doc,.docx" />
+      <div class="file-preview" id="filePreview">No file selected</div>
+    </div>
+
+    <button class="btn" id="convertBtn">Convert</button>
+    <button class="btn" id="downloadBtn" disabled>Download</button>
+  </div>
+
+  <script>
+    let convertMode = "pdfToWord";
+    const fileUpload = document.getElementById("fileUpload");
+    const filePreview = document.getElementById("filePreview");
+    const convertBtn = document.getElementById("convertBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const pdfBtn = document.getElementById("pdfToWordBtn");
+    const wordBtn = document.getElementById("wordToPdfBtn");
+
+    pdfBtn.onclick = () => {
+      convertMode = "pdfToWord";
+      pdfBtn.classList.add("active");
+      wordBtn.classList.remove("active");
+    };
+
+    wordBtn.onclick = () => {
+      convertMode = "wordToPdf";
+      wordBtn.classList.add("active");
+      pdfBtn.classList.remove("active");
+    };
+
+    fileUpload.onchange = () => {
+      const file = fileUpload.files[0];
+      if (file) {
+        filePreview.textContent = "Selected: " + file.name;
+        downloadBtn.disabled = true;
+      }
+    };
+
+    convertBtn.onclick = () => {
+      if (!fileUpload.files[0]) {
+        alert("Please select a file first.");
+        return;
+      }
+
+      // Simulate conversion
+      setTimeout(() => {
+        alert("Conversion complete (mock)");
+        downloadBtn.disabled = false;
+      }, 1000);
+    };
+
+    downloadBtn.onclick = () => {
+      alert("Download started (mock)");
+      // Replace with actual converted file download logic
+    };
+  </script>
+</body>
+</html>
