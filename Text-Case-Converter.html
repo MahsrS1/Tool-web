@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Currency Converter & Image Compressor</title>
+  <style>
+    * {
+      margin: 0; padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    body {
+      background: #f5faff;
+      color: #222;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #007BFF;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: 600;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 2px solid #007BFF;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #007BFF;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      outline: 2px solid white;
+    }
+    .btn:hover {
+      background: #0056cc;
+      transform: scale(1.03);
+    }
+    .result {
+      text-align: center;
+      font-size: 18px;
+      margin-top: 15px;
+      color: #007BFF;
+    }
+
+    .image-section {
+      margin-top: 30px;
+      text-align: center;
+    }
+    #preview {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 10px;
+    }
+    .hidden {
+      display: none;
+    }
+
+    @media(max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Currency Converter</h2>
+    <label for="amount">Amount</label>
+    <input type="number" id="amount" placeholder="e.g. 100" />
+
+    <label for="from">From Currency</label>
+    <select id="from">
+      <option value="INR">INR</option>
+      <option value="USD">USD</option>
+      <option value="EUR">EUR</option>
+      <option value="GBP">GBP</option>
+    </select>
+
+    <label for="to">To Currency</label>
+    <select id="to">
+      <option value="USD">USD</option>
+      <option value="INR">INR</option>
+      <option value="EUR">EUR</option>
+      <option value="GBP">GBP</option>
+    </select>
+
+    <button class="btn" onclick="convertCurrency()">Convert</button>
+
+    <div class="result" id="convertResult"></div>
+
+    <div class="image-section">
+      <h2>Upload and Compress Image</h2>
+      <input type="file" accept="image/*" id="imageInput" />
+      <select id="formatSelect">
+        <option value="image/jpeg">JPEG</option>
+        <option value="image/png">PNG</option>
+        <option value="image/webp">WebP</option>
+      </select>
+      <button class="btn" onclick="compressAndDownload()">Download Compressed Image</button>
+      <img id="preview" class="hidden" />
+    </div>
+  </div>
+
+  <script>
+    // Static conversion rates (can be replaced with API)
+    const rates = {
+      INR: { USD: 0.012, EUR: 0.011, GBP: 0.0095 },
+      USD: { INR: 83.5, EUR: 0.93, GBP: 0.79 },
+      EUR: { INR: 90.1, USD: 1.07, GBP: 0.85 },
+      GBP: { INR: 105.3, USD: 1.27, EUR: 1.18 },
+    };
+
+    function convertCurrency() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      const from = document.getElementById("from").value;
+      const to = document.getElementById("to").value;
+      const resultDiv = document.getElementById("convertResult");
+
+      if (!amount || from === to) {
+        resultDiv.innerHTML = "Please enter amount and select different currencies.";
+        return;
+      }
+
+      const rate = rates[from][to];
+      const converted = amount * rate;
+
+      resultDiv.innerHTML = `Converted Amount: ${to} ${converted.toFixed(2)}`;
+    }
+
+    const imageInput = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+    let selectedImage = null;
+
+    imageInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          preview.src = event.target.result;
+          preview.classList.remove("hidden");
+          selectedImage = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function compressAndDownload() {
+      const format = document.getElementById("formatSelect").value;
+      if (!selectedImage) {
+        alert("Please upload an image first.");
+        return;
+      }
+
+      const img = new Image();
+      img.src = selectedImage;
+      img.onload = function () {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        const maxWidth = 800;
+        const scale = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * scale;
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const compressed = canvas.toDataURL(format, 0.7);
+
+        const link = document.createElement("a");
+        link.href = compressed;
+        link.download = "compressed-image." + format.split("/")[1];
+        link.click();
+      };
+    }
+  </script>
+</body>
+  </html>
