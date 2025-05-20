@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Word & Character Counter</title>
+  <style>
+    * {
+      margin: 0; padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    body {
+      background: #f5faff;
+      padding: 20px;
+      color: #222;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #007BFF;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    textarea, input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 16px;
+      border: 2px solid #007BFF;
+      border-radius: 8px;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #007BFF;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      outline: 2px solid white;
+    }
+    .btn:hover {
+      background: #0056cc;
+      transform: scale(1.03);
+    }
+    .output {
+      margin-top: 10px;
+      font-size: 18px;
+      color: #007BFF;
+      text-align: center;
+    }
+    .image-section {
+      margin-top: 30px;
+      text-align: center;
+    }
+    #preview {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 10px;
+    }
+    .hidden {
+      display: none;
+    }
+
+    @media(max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Word & Character Counter</h2>
+
+    <textarea id="textInput" rows="6" placeholder="Start typing your text here..."></textarea>
+
+    <div class="output">
+      <p>Words: <span id="wordCount">0</span></p>
+      <p>Characters: <span id="charCount">0</span></p>
+    </div>
+
+    <div class="image-section">
+      <h2>Upload and Compress Image</h2>
+      <input type="file" accept="image/*" id="imageInput" />
+      <select id="formatSelect">
+        <option value="image/jpeg">JPEG</option>
+        <option value="image/png">PNG</option>
+        <option value="image/webp">WebP</option>
+      </select>
+      <button class="btn" onclick="compressAndDownload()">Download Compressed Image</button>
+      <img id="preview" class="hidden" />
+    </div>
+  </div>
+
+  <script>
+    const textInput = document.getElementById("textInput");
+    const wordCount = document.getElementById("wordCount");
+    const charCount = document.getElementById("charCount");
+
+    textInput.addEventListener("input", () => {
+      const text = textInput.value.trim();
+      const words = text === "" ? 0 : text.split(/\s+/).length;
+      const chars = text.length;
+      wordCount.textContent = words;
+      charCount.textContent = chars;
+    });
+
+    // Image compressor logic
+    const imageInput = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+    let selectedImage = null;
+
+    imageInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          preview.src = event.target.result;
+          preview.classList.remove("hidden");
+          selectedImage = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function compressAndDownload() {
+      const format = document.getElementById("formatSelect").value;
+      if (!selectedImage) {
+        alert("Please upload an image first.");
+        return;
+      }
+
+      const img = new Image();
+      img.src = selectedImage;
+      img.onload = function () {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        const maxWidth = 800;
+        const scale = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * scale;
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const compressed = canvas.toDataURL(format, 0.7);
+
+        const link = document.createElement("a");
+        link.href = compressed;
+        link.download = "compressed-image." + format.split("/")[1];
+        link.click();
+      };
+    }
+  </script>
+</body>
+</html>
