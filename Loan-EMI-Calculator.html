@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Loan EMI Calculator & Image Converter</title>
+  <style>
+    * {
+      margin: 0; padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    body {
+      background: #f5faff;
+      color: #222;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #007BFF;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: 600;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 2px solid #007BFF;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #007BFF;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      outline: 2px solid white;
+    }
+    .btn:hover {
+      background: #0056cc;
+      transform: scale(1.03);
+    }
+    .result {
+      text-align: center;
+      font-size: 18px;
+      margin-top: 15px;
+      color: #007BFF;
+    }
+
+    .image-section {
+      margin-top: 30px;
+      text-align: center;
+    }
+    #preview {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 10px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Loan EMI Calculator</h2>
+    <label for="amount">Loan Amount (₹)</label>
+    <input type="number" id="amount" placeholder="e.g. 100000" />
+
+    <label for="interest">Annual Interest Rate (%)</label>
+    <input type="number" id="interest" placeholder="e.g. 7.5" step="0.01" />
+
+    <label for="tenure">Loan Tenure (Years)</label>
+    <input type="number" id="tenure" placeholder="e.g. 5" />
+
+    <button class="btn" onclick="calculateEMI()">Calculate EMI</button>
+
+    <div class="result" id="emiResult"></div>
+
+    <div class="image-section">
+      <h2>Upload and Compress Image</h2>
+      <input type="file" accept="image/*" id="imageInput" />
+      <select id="formatSelect">
+        <option value="image/jpeg">JPEG</option>
+        <option value="image/png">PNG</option>
+        <option value="image/webp">WebP</option>
+      </select>
+      <button class="btn" onclick="compressAndDownload()">Download Compressed Image</button>
+      <img id="preview" class="hidden" />
+    </div>
+  </div>
+
+  <script>
+    function calculateEMI() {
+      const principal = parseFloat(document.getElementById("amount").value);
+      const annualRate = parseFloat(document.getElementById("interest").value);
+      const years = parseFloat(document.getElementById("tenure").value);
+
+      if (!principal || !annualRate || !years) {
+        document.getElementById("emiResult").innerText = "Please fill all fields.";
+        return;
+      }
+
+      const monthlyRate = annualRate / 12 / 100;
+      const n = years * 12;
+
+      const emi = (principal * monthlyRate * Math.pow(1 + monthlyRate, n)) / 
+                  (Math.pow(1 + monthlyRate, n) - 1);
+
+      const totalPayment = emi * n;
+      const interestPayable = totalPayment - principal;
+
+      document.getElementById("emiResult").innerHTML = `
+        EMI: ₹${emi.toFixed(2)}<br>
+        Total Interest: ₹${interestPayable.toFixed(2)}<br>
+        Total Payment: ₹${totalPayment.toFixed(2)}
+      `;
+    }
+
+    const imageInput = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+    let selectedImage = null;
+
+    imageInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          preview.src = event.target.result;
+          preview.classList.remove("hidden");
+          selectedImage = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function compressAndDownload() {
+      const format = document.getElementById("formatSelect").value;
+      if (!selectedImage) {
+        alert("Please upload an image first.");
+        return;
+      }
+
+      const img = new Image();
+      img.src = selectedImage;
+      img.onload = function () {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        // Resize to max 800px width
+        const maxWidth = 800;
+        const scale = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * scale;
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const compressed = canvas.toDataURL(format, 0.7);
+
+        const link = document.createElement("a");
+        link.href = compressed;
+        link.download = "compressed-image." + format.split("/")[1];
+        link.click();
+      };
+    }
+  </script>
+</body>
+</html>
