@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Text Sorter Lines Tool</title>
+  <style>
+    * {
+      margin: 0; padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    body {
+      background: #f5faff;
+      padding: 20px;
+      color: #222;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #007BFF;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    textarea, input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 16px;
+      border: 2px solid #007BFF;
+      border-radius: 8px;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #007BFF;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      outline: 2px solid white;
+    }
+    .btn:hover {
+      background: #0056cc;
+      transform: scale(1.03);
+    }
+    .image-section {
+      margin-top: 30px;
+      text-align: center;
+    }
+    #preview {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 10px;
+    }
+    .hidden {
+      display: none;
+    }
+    @media(max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Text Sorter Lines Tool</h2>
+
+    <textarea id="textInput" rows="6" placeholder="Paste your lines to sort..."></textarea>
+    <button class="btn" onclick="sortLines()">Sort Lines A-Z</button>
+    <textarea id="output" rows="6" placeholder="Sorted lines..." readonly></textarea>
+
+    <div class="image-section">
+      <h2>Upload and Compress Image</h2>
+      <input type="file" accept="image/*" id="imageInput" />
+      <select id="formatSelect">
+        <option value="image/jpeg">JPEG</option>
+        <option value="image/png">PNG</option>
+        <option value="image/webp">WebP</option>
+      </select>
+      <button class="btn" onclick="compressAndDownload()">Download Compressed Image</button>
+      <img id="preview" class="hidden" />
+    </div>
+  </div>
+
+  <script>
+    function sortLines() {
+      const input = document.getElementById("textInput").value;
+      const lines = input.split('\n').map(line => line.trim()).filter(line => line !== "");
+      const sorted = lines.sort((a, b) => a.localeCompare(b));
+      document.getElementById("output").value = sorted.join('\n');
+    }
+
+    // Image Compressor
+    const imageInput = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+    let selectedImage = null;
+
+    imageInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          preview.src = event.target.result;
+          preview.classList.remove("hidden");
+          selectedImage = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function compressAndDownload() {
+      const format = document.getElementById("formatSelect").value;
+      if (!selectedImage) {
+        alert("Please upload an image first.");
+        return;
+      }
+
+      const img = new Image();
+      img.src = selectedImage;
+      img.onload = function () {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        const maxWidth = 800;
+        const scale = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * scale;
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const compressed = canvas.toDataURL(format, 0.7);
+
+        const link = document.createElement("a");
+        link.href = compressed;
+        link.download = "compressed-image." + format.split("/")[1];
+        link.click();
+      };
+    }
+  </script>
+</body>
+</html>
