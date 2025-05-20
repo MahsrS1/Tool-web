@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PDF Lock/Unlock Tool</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: linear-gradient(to bottom right, #e6f0ff, #ffffff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #ffffff;
+      border: 2px solid #007bff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 123, 255, 0.15);
+      padding: 20px;
+      width: 90%;
+      max-width: 500px;
+    }
+
+    .title {
+      font-size: 24px;
+      color: #007bff;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .upload-label {
+      display: block;
+      text-align: center;
+      padding: 12px 25px;
+      border: 2px dashed #007bff;
+      color: #007bff;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .upload-label:hover {
+      background: #007bff;
+      color: white;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .file-info {
+      text-align: center;
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .radio-group {
+      display: flex;
+      justify-content: space-around;
+      margin: 15px 0;
+    }
+
+    .radio-group label {
+      font-weight: 500;
+      color: #007bff;
+    }
+
+    .input-group {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      border: 2px solid #007bff;
+      border-radius: 30px;
+      background: none;
+      color: #007bff;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      background: #007bff;
+      color: white;
+      transform: scale(1.03);
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .status {
+      text-align: center;
+      margin-top: 10px;
+      color: #28a745;
+      font-weight: 500;
+    }
+
+    @media (max-width: 600px) {
+      .title {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="title">PDF Lock / Unlock Tool</div>
+
+    <label for="pdfUpload" class="upload-label">Upload PDF File</label>
+    <input type="file" id="pdfUpload" accept=".pdf" />
+    <div class="file-info" id="fileInfo">No file selected</div>
+
+    <div class="radio-group">
+      <label><input type="radio" name="action" value="lock" checked /> Lock</label>
+      <label><input type="radio" name="action" value="unlock" /> Unlock</label>
+    </div>
+
+    <div class="input-group" id="passwordGroup">
+      <input type="password" id="passwordInput" placeholder="Enter password..." />
+    </div>
+
+    <button class="btn" id="processBtn">Process</button>
+    <button class="btn" id="downloadBtn" disabled>Download PDF</button>
+
+    <div class="status" id="statusText"></div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('pdfUpload');
+    const fileInfo = document.getElementById('fileInfo');
+    const passwordGroup = document.getElementById('passwordGroup');
+    const passwordInput = document.getElementById('passwordInput');
+    const processBtn = document.getElementById('processBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const statusText = document.getElementById('statusText');
+
+    let selectedFile = null;
+    let action = 'lock';
+
+    fileInput.addEventListener('change', () => {
+      selectedFile = fileInput.files[0];
+      fileInfo.textContent = selectedFile ? `Selected: ${selectedFile.name}` : 'No file selected';
+      statusText.textContent = '';
+      downloadBtn.disabled = true;
+    });
+
+    document.querySelectorAll('input[name="action"]').forEach(radio => {
+      radio.addEventListener('change', e => {
+        action = e.target.value;
+        passwordGroup.style.display = action === 'lock' ? 'block' : 'none';
+      });
+    });
+
+    processBtn.addEventListener('click', () => {
+      if (!selectedFile) {
+        alert('Please upload a PDF file.');
+        return;
+      }
+
+      if (action === 'lock' && passwordInput.value.trim() === '') {
+        alert('Please enter a password to lock the PDF.');
+        return;
+      }
+
+      processBtn.disabled = true;
+      statusText.textContent = 'Processing...';
+
+      setTimeout(() => {
+        statusText.textContent = `PDF ${action === 'lock' ? 'locked' : 'unlocked'} successfully!`;
+        processBtn.disabled = false;
+        downloadBtn.disabled = false;
+      }, 1500);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      alert('Download started (simulated).');
+    });
+  </script>
+</body>
+</html>
