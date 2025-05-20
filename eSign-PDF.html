@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>eSign PDF Tool</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom right, #e6f0ff, #ffffff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #ffffff;
+      border: 2px solid #007bff;
+      border-radius: 16px;
+      padding: 20px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 8px 24px rgba(0, 123, 255, 0.15);
+    }
+
+    .title {
+      font-size: 24px;
+      color: #007bff;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .upload-label {
+      display: block;
+      text-align: center;
+      padding: 12px 25px;
+      border: 2px dashed #007bff;
+      color: #007bff;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 15px;
+      transition: 0.3s ease;
+    }
+
+    .upload-label:hover {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .file-info {
+      text-align: center;
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .preview-box {
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      height: 250px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 15px;
+      color: #aaa;
+      font-style: italic;
+    }
+
+    canvas {
+      border: 2px solid #007bff;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 100%;
+      height: 120px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 30px;
+      border: 2px solid #007bff;
+      background: none;
+      color: #007bff;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      background: #007bff;
+      color: white;
+      transform: scale(1.02);
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .status {
+      text-align: center;
+      margin-top: 10px;
+      color: #28a745;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="title">eSign PDF Tool</div>
+
+    <label for="pdfUpload" class="upload-label">Upload PDF</label>
+    <input type="file" id="pdfUpload" accept=".pdf"/>
+    <div class="file-info" id="fileInfo">No file selected</div>
+
+    <div class="preview-box" id="pdfPreview">[ PDF Preview Here ]</div>
+
+    <p style="font-weight:bold; color:#007bff; text-align:center;">Draw Your Signature</p>
+    <canvas id="signatureCanvas"></canvas>
+    <button class="btn" id="clearSign">Clear Signature</button>
+
+    <button class="btn" id="applySignBtn">Apply Signature</button>
+    <button class="btn" id="downloadBtn" disabled>Download Signed PDF</button>
+
+    <div class="status" id="statusText"></div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('pdfUpload');
+    const fileInfo = document.getElementById('fileInfo');
+    const pdfPreview = document.getElementById('pdfPreview');
+    const signatureCanvas = document.getElementById('signatureCanvas');
+    const ctx = signatureCanvas.getContext('2d');
+    const clearSign = document.getElementById('clearSign');
+    const applySignBtn = document.getElementById('applySignBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const statusText = document.getElementById('statusText');
+
+    let isDrawing = false;
+    let uploadedFile = null;
+
+    // Signature drawing
+    signatureCanvas.addEventListener('mousedown', e => {
+      isDrawing = true;
+      ctx.beginPath();
+      ctx.moveTo(e.offsetX, e.offsetY);
+    });
+
+    signatureCanvas.addEventListener('mousemove', e => {
+      if (isDrawing) {
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    });
+
+    signatureCanvas.addEventListener('mouseup', () => isDrawing = false);
+    signatureCanvas.addEventListener('mouseleave', () => isDrawing = false);
+
+    clearSign.addEventListener('click', () => {
+      ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+    });
+
+    fileInput.addEventListener('change', () => {
+      uploadedFile = fileInput.files[0];
+      if (uploadedFile) {
+        fileInfo.textContent = `Selected: ${uploadedFile.name}`;
+        pdfPreview.textContent = '[ PDF Preview (Simulated) ]';
+        downloadBtn.disabled = true;
+        statusText.textContent = '';
+      }
+    });
+
+    applySignBtn.addEventListener('click', () => {
+      if (!uploadedFile) {
+        alert('Please upload a PDF file first.');
+        return;
+      }
+
+      const signatureData = signatureCanvas.toDataURL();
+
+      if (signatureData === signatureCanvas.toDataURL("image/png", 0)) {
+        alert('Please draw your signature.');
+        return;
+      }
+
+      applySignBtn.disabled = true;
+      statusText.textContent = 'Applying signature...';
+
+      setTimeout(() => {
+        statusText.textContent = 'Signature applied successfully!';
+        applySignBtn.disabled = false;
+        downloadBtn.disabled = false;
+      }, 1500);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      alert('Download started (simulated)');
+      statusText.textContent = 'Download ready!';
+    });
+  </script>
+</body>
+</html>
