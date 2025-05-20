@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Document Converter Tool</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom right, #e6f0ff, #ffffff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      border: 2px solid #007bff;
+      border-radius: 16px;
+      padding: 20px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 8px 24px rgba(0, 123, 255, 0.15);
+    }
+
+    .title {
+      text-align: center;
+      font-size: 24px;
+      color: #007bff;
+      margin-bottom: 20px;
+    }
+
+    .upload-box {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .upload-label {
+      display: inline-block;
+      padding: 12px 25px;
+      border: 2px dashed #007bff;
+      border-radius: 12px;
+      cursor: pointer;
+      color: #007bff;
+      font-weight: bold;
+      transition: 0.3s ease;
+    }
+
+    .upload-label:hover {
+      background: #007bff;
+      color: white;
+    }
+
+    .file-info {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #007bff;
+      background: none;
+      color: #007bff;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      margin: 15px 0 5px;
+      transition: 0.3s ease;
+    }
+
+    .btn:hover {
+      background: #007bff;
+      color: white;
+      transform: scale(1.02);
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .status {
+      text-align: center;
+      color: #28a745;
+      font-weight: 500;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .title {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="title">Document Converter Tool</div>
+
+    <div class="upload-box">
+      <label for="docUpload" class="upload-label">Upload Document</label>
+      <input type="file" id="docUpload" accept=".doc,.docx,.pdf,.txt,.rtf,.odt"/>
+      <div class="file-info" id="fileInfo">No file selected</div>
+    </div>
+
+    <select id="formatSelect">
+      <option value="">Select output format</option>
+      <option value="pdf">PDF</option>
+      <option value="docx">DOCX</option>
+      <option value="txt">TXT</option>
+    </select>
+
+    <button class="btn" id="convertBtn">Convert</button>
+    <button class="btn" id="downloadBtn" disabled>Download File</button>
+
+    <div class="status" id="statusText"></div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('docUpload');
+    const fileInfo = document.getElementById('fileInfo');
+    const formatSelect = document.getElementById('formatSelect');
+    const convertBtn = document.getElementById('convertBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const statusText = document.getElementById('statusText');
+
+    let selectedFile = null;
+
+    fileInput.addEventListener('change', () => {
+      selectedFile = fileInput.files[0];
+      if (selectedFile) {
+        fileInfo.textContent = `Selected: ${selectedFile.name}`;
+        statusText.textContent = '';
+        downloadBtn.disabled = true;
+      } else {
+        fileInfo.textContent = 'No file selected';
+      }
+    });
+
+    convertBtn.addEventListener('click', () => {
+      const format = formatSelect.value;
+
+      if (!selectedFile) {
+        alert('Please select a document file first.');
+        return;
+      }
+
+      if (!format) {
+        alert('Please select an output format.');
+        return;
+      }
+
+      convertBtn.disabled = true;
+      statusText.textContent = 'Converting...';
+
+      // Simulate conversion
+      setTimeout(() => {
+        statusText.textContent = `Conversion to ${format.toUpperCase()} completed!`;
+        convertBtn.disabled = false;
+        downloadBtn.disabled = false;
+      }, 1500);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      alert('Download started (simulated)');
+      // In real app: download file using blob or backend link
+    });
+  </script>
+</body>
+</html>
