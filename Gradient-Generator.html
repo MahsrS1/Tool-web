@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gradient Generator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #e8f5ff;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #007BFF;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    label {
+      font-weight: bold;
+    }
+    input[type="color"], select {
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid #007BFF;
+    }
+    .gradient-preview {
+      height: 200px;
+      border-radius: 10px;
+      margin-top: 20px;
+      border: 2px solid #007BFF;
+    }
+    .btn {
+      padding: 12px;
+      background: transparent;
+      color: #007BFF;
+      border: 2px solid #007BFF;
+      border-radius: 50px;
+      font-weight: bold;
+      font-size: 16px;
+      transition: 0.3s;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+    }
+    .btn:hover {
+      background: #007BFF;
+      color: white;
+      transform: scale(1.05);
+    }
+    canvas {
+      display: none;
+    }
+    @media (max-width: 600px) {
+      .controls { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Gradient Generator Tool</h2>
+    <div class="controls">
+      <label>Choose First Color:</label>
+      <input type="color" id="color1" value="#ff6a00">
+
+      <label>Choose Second Color:</label>
+      <input type="color" id="color2" value="#007BFF">
+
+      <label>Select Direction:</label>
+      <select id="direction">
+        <option value="to right">Left to Right</option>
+        <option value="to bottom">Top to Bottom</option>
+        <option value="to left">Right to Left</option>
+        <option value="to top">Bottom to Top</option>
+        <option value="45deg">Diagonal (45deg)</option>
+        <option value="135deg">Diagonal (135deg)</option>
+      </select>
+    </div>
+
+    <div class="gradient-preview" id="previewBox"></div>
+
+    <select id="formatSelect">
+      <option value="image/png">PNG</option>
+      <option value="image/jpeg">JPEG</option>
+      <option value="image/webp">WebP</option>
+    </select>
+
+    <button class="btn" onclick="downloadGradient()">Download Gradient Image</button>
+
+    <canvas id="gradientCanvas" width="600" height="200"></canvas>
+  </div>
+
+  <script>
+    const color1 = document.getElementById("color1");
+    const color2 = document.getElementById("color2");
+    const direction = document.getElementById("direction");
+    const previewBox = document.getElementById("previewBox");
+    const canvas = document.getElementById("gradientCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function updateGradient() {
+      const gradient = `linear-gradient(${direction.value}, ${color1.value}, ${color2.value})`;
+      previewBox.style.background = gradient;
+    }
+
+    color1.addEventListener("input", updateGradient);
+    color2.addEventListener("input", updateGradient);
+    direction.addEventListener("change", updateGradient);
+
+    updateGradient(); // Initialize on load
+
+    function downloadGradient() {
+      // Draw on canvas
+      const gradDir = direction.value;
+      let grad;
+
+      if (gradDir.includes("to")) {
+        const dirs = {
+          "to right": [0, 0, canvas.width, 0],
+          "to left": [canvas.width, 0, 0, 0],
+          "to bottom": [0, 0, 0, canvas.height],
+          "to top": [0, canvas.height, 0, 0]
+        };
+        grad = ctx.createLinearGradient(...dirs[gradDir]);
+      } else {
+        // Degree-based
+        const angle = parseInt(gradDir);
+        const x = Math.cos(angle * Math.PI / 180) * canvas.width;
+        const y = Math.sin(angle * Math.PI / 180) * canvas.height;
+        grad = ctx.createLinearGradient(0, 0, x, y);
+      }
+
+      grad.addColorStop(0, color1.value);
+      grad.addColorStop(1, color2.value);
+
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const format = document.getElementById("formatSelect").value;
+      const link = document.createElement("a");
+      link.download = `gradient.${format.split("/")[1]}`;
+      link.href = canvas.toDataURL(format, 0.9);
+      link.click();
+    }
+  </script>
+</body>
+</html>
