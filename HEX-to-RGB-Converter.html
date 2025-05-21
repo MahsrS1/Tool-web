@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HEX to RGB Converter</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #e8f5ff;
+      color: #222;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #007BFF;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input[type="text"], input[type="file"], select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 2px solid #007BFF;
+      border-radius: 8px;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      color: #007BFF;
+      border: 2px solid #007BFF;
+      border-radius: 50px;
+      font-weight: bold;
+      font-size: 16px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background: #007BFF;
+      color: #fff;
+      transform: scale(1.05);
+    }
+    .output-box {
+      text-align: center;
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 10px;
+      background: #e0f5ff;
+    }
+    .color-preview {
+      width: 40px;
+      height: 40px;
+      display: inline-block;
+      border-radius: 50%;
+      border: 2px solid #007BFF;
+      margin-right: 10px;
+    }
+    canvas {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>HEX to RGB Converter</h2>
+
+    <input type="text" id="hexInput" placeholder="Enter HEX code (e.g. #1a2b3c)">
+    <button class="btn" onclick="convertToRGB()">Convert to RGB</button>
+
+    <div class="output-box" id="outputBox">
+      <div class="color-preview" id="previewColor"></div>
+      <span id="rgbResult">RGB value will appear here</span>
+    </div>
+
+    <input type="file" id="imageUpload" accept="image/*">
+    <canvas id="canvas"></canvas>
+
+    <select id="formatSelect">
+      <option value="image/jpeg">JPEG</option>
+      <option value="image/png">PNG</option>
+      <option value="image/webp">WebP</option>
+    </select>
+    <button class="btn" onclick="downloadImage()">Download Compressed Image</button>
+  </div>
+
+  <script>
+    const hexInput = document.getElementById('hexInput');
+    const rgbResult = document.getElementById('rgbResult');
+    const previewColor = document.getElementById('previewColor');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const imageUpload = document.getElementById('imageUpload');
+
+    let img = new Image();
+    let imgDataURL = "";
+
+    function convertToRGB() {
+      const hex = hexInput.value.trim();
+      if (!/^#([0-9a-f]{3}){1,2}$/i.test(hex)) {
+        rgbResult.textContent = "Invalid HEX code!";
+        previewColor.style.background = "#fff";
+        return;
+      }
+
+      let r, g, b;
+      const hexVal = hex.substring(1);
+
+      if (hexVal.length === 3) {
+        r = parseInt(hexVal[0] + hexVal[0], 16);
+        g = parseInt(hexVal[1] + hexVal[1], 16);
+        b = parseInt(hexVal[2] + hexVal[2], 16);
+      } else {
+        r = parseInt(hexVal.substring(0, 2), 16);
+        g = parseInt(hexVal.substring(2, 4), 16);
+        b = parseInt(hexVal.substring(4, 6), 16);
+      }
+
+      const rgb = `rgb(${r}, ${g}, ${b})`;
+      rgbResult.textContent = rgb;
+      previewColor.style.background = rgb;
+    }
+
+    imageUpload.addEventListener("change", function () {
+      const file = this.files[0];
+      if (!file || !file.type.startsWith("image/")) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        imgDataURL = e.target.result;
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    img.onload = () => {
+      const scale = Math.min(600 / img.width, 400 / img.height);
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+
+    function downloadImage() {
+      if (!imgDataURL) {
+        alert("Please upload an image first.");
+        return;
+      }
+      const format = document.getElementById("formatSelect").value;
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL(format, 0.8);
+      a.download = `converted.${format.split('/')[1]}`;
+      a.click();
+    }
+  </script>
+</body>
+</html>
