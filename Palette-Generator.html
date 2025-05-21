@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Palette Generator Tool</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #e8f5ff;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #007BFF;
+    }
+    .palette {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+    .color-box {
+      flex: 1 1 100px;
+      height: 100px;
+      border-radius: 8px;
+      position: relative;
+      text-align: center;
+      color: #fff;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    input[type="file"], select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 10px;
+      border: 2px solid #007BFF;
+    }
+    .btn {
+      width: 100%;
+      margin-top: 15px;
+      padding: 12px;
+      font-weight: bold;
+      color: #007BFF;
+      border: 2px solid #007BFF;
+      background: transparent;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .btn:hover {
+      background: #007BFF;
+      color: white;
+      transform: scale(1.05);
+    }
+    canvas { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Palette Generator Tool</h2>
+    
+    <button class="btn" onclick="generateRandomPalette()">Generate Random Palette</button>
+
+    <label for="imageUpload">Upload Image to Extract Palette:</label>
+    <input type="file" id="imageUpload" accept="image/*">
+
+    <div class="palette" id="palette"></div>
+
+    <select id="formatSelect">
+      <option value="image/png">PNG</option>
+      <option value="image/jpeg">JPEG</option>
+      <option value="image/webp">WebP</option>
+    </select>
+    <button class="btn" onclick="downloadPalette()">Download Palette Preview</button>
+
+    <canvas id="canvas" width="800" height="120"></canvas>
+  </div>
+
+  <script>
+    const paletteDiv = document.getElementById("palette");
+
+    function generateRandomColor() {
+      return "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6, "0");
+    }
+
+    function generateRandomPalette() {
+      paletteDiv.innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        const color = generateRandomColor();
+        const div = document.createElement("div");
+        div.className = "color-box";
+        div.style.background = color;
+        div.innerText = color;
+        paletteDiv.appendChild(div);
+      }
+    }
+
+    function downloadPalette() {
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const colors = Array.from(document.querySelectorAll(".color-box")).map(el => el.innerText);
+      const boxWidth = canvas.width / colors.length;
+
+      colors.forEach((color, i) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(i * boxWidth, 0, boxWidth, canvas.height);
+        ctx.fillStyle = "#000";
+        ctx.font = "16px Arial";
+        ctx.fillText(color, i * boxWidth + 10, canvas.height - 10);
+      });
+
+      const format = document.getElementById("formatSelect").value;
+      const link = document.createElement("a");
+      link.download = `palette.${format.split('/')[1]}`;
+      link.href = canvas.toDataURL(format);
+      link.click();
+    }
+
+    function extractColorsFromImage(image) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = image.width;
+      canvas.height = image.height;
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+
+      const colorMap = {};
+      for (let i = 0; i < data.length; i += 4) {
+        const rgb = `${data[i]},${data[i+1]},${data[i+2]}`;
+        colorMap[rgb] = (colorMap[rgb] || 0) + 1;
+      }
+
+      const sortedColors = Object.entries(colorMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(entry => {
+          const [r, g, b] = entry[0].split(',').map(Number);
+          return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+        });
+
+      paletteDiv.innerHTML = '';
+      sortedColors.forEach(color => {
+        const div = document.createElement("div");
+        div.className = "color-box";
+        div.style.background = color;
+        div.innerText = color;
+        paletteDiv.appendChild(div);
+      });
+    }
+
+    document.getElementById("imageUpload").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const img = new Image();
+      img.onload = () => extractColorsFromImage(img);
+      img.src = URL.createObjectURL(file);
+    });
+
+    generateRandomPalette(); // default on load
+  </script>
+</body>
+</html>
