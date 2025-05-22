@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Color Blindness Simulator</title>
+  <style>
+    :root {
+      --primary: #007bff;
+      --background: #ffffff;
+      --text: #1a1a1a;
+      --border-radius: 12px;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: var(--primary);
+      text-align: center;
+    }
+
+    .tool-container {
+      max-width: 600px;
+      width: 100%;
+      background: #f9f9f9;
+      border-radius: var(--border-radius);
+      padding: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 1rem;
+      border-radius: var(--border-radius);
+      border: 2px solid var(--primary);
+      background: #fff;
+      color: var(--primary);
+      transition: all 0.3s ease;
+    }
+
+    button:hover, select:hover {
+      background: var(--primary);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    canvas {
+      max-width: 100%;
+      margin-top: 1rem;
+      border: 1px solid #ccc;
+      border-radius: var(--border-radius);
+    }
+
+    @media (max-width: 600px) {
+      input, select, button {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Color Blindness Simulator</h1>
+  <div class="tool-container">
+    <input type="file" id="fileInput" accept="image/*">
+    <select id="filterSelect">
+      <option value="normal">Normal Vision</option>
+      <option value="protanopia">Protanopia</option>
+      <option value="deuteranopia">Deuteranopia</option>
+      <option value="tritanopia">Tritanopia</option>
+    </select>
+    <canvas id="canvas"></canvas>
+    <button onclick="downloadCompressed()">Download Compressed Image</button>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const filterSelect = document.getElementById("filterSelect");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    let originalImage = new Image();
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        originalImage.onload = function() {
+          canvas.width = originalImage.width;
+          canvas.height = originalImage.height;
+          ctx.drawImage(originalImage, 0, 0);
+          applyFilter();
+        };
+        originalImage.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    filterSelect.addEventListener("change", applyFilter);
+
+    function applyFilter() {
+      if (!originalImage.src) return;
+      ctx.drawImage(originalImage, 0, 0);
+      let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      let data = imageData.data;
+      let filter = filterSelect.value;
+
+      for (let i = 0; i < data.length; i += 4) {
+        let r = data[i], g = data[i+1], b = data[i+2];
+
+        if (filter === "protanopia") {
+          data[i] = 0.56667 * r + 0.43333 * g;
+          data[i+1] = 0.55833 * r + 0.44167 * g;
+          data[i+2] = b;
+        } else if (filter === "deuteranopia") {
+          data[i] = 0.625 * r + 0.375 * g;
+          data[i+1] = 0.7 * r + 0.3 * g;
+          data[i+2] = b;
+        } else if (filter === "tritanopia") {
+          data[i] = r;
+          data[i+1] = 0.95 * g + 0.05 * b;
+          data[i+2] = 0.433 * g + 0.567 * b;
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    function downloadCompressed() {
+      const link = document.createElement("a");
+      link.download = "colorblind-simulated.jpg";
+      link.href = canvas.toDataURL("image/jpeg", 0.7); // Compressed JPEG
+      link.click();
+    }
+  </script>
+</body>
+</html>
