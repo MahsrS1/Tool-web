@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QR Code Generator & Scanner</title>
+  <style>
+    :root {
+      --primary: #007bff;
+      --light-bg: #ffffff;
+      --text: #333;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--light-bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: var(--primary);
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 700px;
+      background: #f9f9f9;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    input[type="text"], input[type="file"], button {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border: 2px solid var(--primary);
+      border-radius: 10px;
+      font-size: 1rem;
+      background: #fff;
+      color: var(--primary);
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    .qr-display {
+      display: flex;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+
+    #qrImage {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    #scanResult {
+      margin-top: 1rem;
+      font-weight: bold;
+      color: green;
+    }
+
+    @media (max-width: 600px) {
+      input, button {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>QR Code Generator & Scanner</h1>
+  <div class="container">
+    <h3>Generate QR Code</h3>
+    <input type="text" id="qrText" placeholder="Enter text or URL" />
+    <button onclick="generateQRCode()">Generate</button>
+    <div class="qr-display">
+      <canvas id="qrCanvas"></canvas>
+    </div>
+    <button onclick="downloadQR()">Download QR Code</button>
+
+    <hr style="margin: 2rem 0; border-color: #ccc;" />
+
+    <h3>Scan QR Code</h3>
+    <input type="file" id="qrFile" accept="image/*" />
+    <button onclick="scanQRCode()">Scan</button>
+    <p id="scanResult"></p>
+  </div>
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+
+  <script>
+    function generateQRCode() {
+      const text = document.getElementById("qrText").value;
+      const canvas = document.getElementById("qrCanvas");
+      if (!text) return alert("Please enter text to generate QR.");
+      QRCode.toCanvas(canvas, text, { width: 200 }, err => {
+        if (err) console.error(err);
+      });
+    }
+
+    function downloadQR() {
+      const canvas = document.getElementById("qrCanvas");
+      const link = document.createElement("a");
+      link.download = "qr-code.png";
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+
+    function scanQRCode() {
+      const fileInput = document.getElementById("qrFile");
+      const file = fileInput.files[0];
+      const resultElem = document.getElementById("scanResult");
+
+      if (!file) return alert("Please upload a QR code image.");
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, canvas.width, canvas.height);
+          resultElem.textContent = code ? `Scanned Result: ${code.data}` : "QR Code not detected.";
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
+  </html>
