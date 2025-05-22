@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Barcode Generator Tool</title>
+  <style>
+    :root {
+      --primary: #007bff;
+      --background: #ffffff;
+      --text: #333;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--background);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 700px;
+      background: #f9f9f9;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    input[type="text"], button {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border-radius: 10px;
+      font-size: 1rem;
+      border: 2px solid var(--primary);
+      background: #fff;
+      color: var(--primary);
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background: var(--primary);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    .barcode-output {
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    canvas {
+      max-width: 100%;
+      background: #fff;
+      border-radius: 10px;
+    }
+
+    @media (max-width: 600px) {
+      input, button {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Barcode Generator</h1>
+  <div class="container">
+    <input type="text" id="barcodeInput" placeholder="Enter text or numbers" />
+    <button onclick="generateBarcode()">Generate Barcode</button>
+    <div class="barcode-output">
+      <canvas id="barcodeCanvas"></canvas>
+    </div>
+    <button onclick="downloadBarcode()">Download Barcode</button>
+  </div>
+
+  <!-- Barcode Generator Library -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <script>
+    function generateBarcode() {
+      const input = document.getElementById('barcodeInput').value;
+      const canvas = document.getElementById('barcodeCanvas');
+      if (!input.trim()) return alert("Please enter some text or number.");
+      JsBarcode(canvas, input, {
+        format: "CODE128",
+        lineColor: "#000",
+        width: 2,
+        height: 100,
+        displayValue: true,
+        font: "monospace"
+      });
+    }
+
+    function downloadBarcode() {
+      const canvas = document.getElementById("barcodeCanvas");
+      const link = document.createElement("a");
+      link.download = "barcode.png";
+      link.href = canvas.toDataURL("image/png", 0.8); // 0.8 = compressed
+      link.click();
+    }
+  </script>
+</body>
+</html>
