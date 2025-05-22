@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Word Counter Tool</title>
+  <style>
+    :root {
+      --primary: #007bff;
+      --background: #ffffff;
+      --text: #333;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--background);
+      margin: 0;
+      padding: 1rem;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 700px;
+      background: #f9f9f9;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    input, textarea, button {
+      width: 100%;
+      margin: 0.5rem 0;
+      padding: 0.75rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      border: 2px solid var(--primary);
+      background: #fff;
+      color: var(--primary);
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: var(--primary);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    textarea {
+      height: 200px;
+    }
+
+    .results {
+      margin-top: 1rem;
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 1rem;
+      border-radius: 10px;
+    }
+
+    .results p {
+      margin: 0.5rem 0;
+    }
+
+    @media (max-width: 600px) {
+      input, textarea, button {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Word Counter Tool</h1>
+  <div class="container">
+    <input type="file" id="fileInput" accept=".txt,.html,.docx" />
+    <textarea id="textInput" placeholder="Paste your text here..."></textarea>
+    <button onclick="countWords()">Count Words</button>
+    <div class="results" id="output"></div>
+    <button onclick="downloadResults()">Download Report</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const textInput = document.getElementById("textInput");
+    const output = document.getElementById("output");
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      const ext = file.name.split('.').pop().toLowerCase();
+
+      reader.onload = function(evt) {
+        if (ext === 'docx') {
+          mammoth.extractRawText({ arrayBuffer: evt.target.result }).then(result => {
+            textInput.value = result.value;
+          });
+        } else {
+          const text = ext === 'html' ? evt.target.result.replace(/<[^>]+>/g, '') : evt.target.result;
+          textInput.value = text;
+        }
+      };
+
+      if (ext === 'docx') {
+        reader.readAsArrayBuffer(file);
+      } else {
+        reader.readAsText(file);
+      }
+    });
+
+    function countWords() {
+      const text = textInput.value;
+      const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+      const charCount = text.replace(/\s/g, '').length;
+      const sentenceCount = (text.match(/[\w\s,]+[.!?]+/g) || []).length;
+      const paragraphCount = (text.trim().split(/\n+/).filter(p => p.trim().length > 0)).length;
+
+      output.innerHTML = `
+        <p><strong>Words:</strong> ${wordCount}</p>
+        <p><strong>Characters (no spaces):</strong> ${charCount}</p>
+        <p><strong>Sentences:</strong> ${sentenceCount}</p>
+        <p><strong>Paragraphs:</strong> ${paragraphCount}</p>
+      `;
+    }
+
+    function downloadResults() {
+      const blob = new Blob([output.innerHTML], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "word-count-report.html";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
