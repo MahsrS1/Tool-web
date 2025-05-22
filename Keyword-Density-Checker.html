@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Keyword Density Checker</title>
+  <style>
+    :root {
+      --primary: #007bff;
+      --background: #ffffff;
+      --text-color: #333;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--background);
+      margin: 0;
+      padding: 1rem;
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: var(--primary);
+      text-align: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 700px;
+      background: #f9f9f9;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    input, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border: 2px solid var(--primary);
+      border-radius: 10px;
+      font-size: 1rem;
+      background: #fff;
+      color: var(--primary);
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: var(--primary);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      margin-top: 1rem;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 1rem;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 0.6rem;
+      text-align: center;
+    }
+
+    th {
+      background: var(--primary);
+      color: white;
+    }
+
+    @media (max-width: 600px) {
+      input, button, textarea {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Keyword Density Checker</h1>
+  <div class="container">
+    <input type="file" accept=".txt,.html,.docx" id="fileInput" />
+    <textarea id="textInput" placeholder="Or paste your text here..."></textarea>
+    <button onclick="analyzeText()">Analyze Keyword Density</button>
+    <div id="output"></div>
+    <button onclick="downloadResults()">Download Result</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const textInput = document.getElementById("textInput");
+    const output = document.getElementById("output");
+
+    fileInput.addEventListener("change", handleFileUpload);
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      const ext = file.name.split(".").pop().toLowerCase();
+
+      reader.onload = function(e) {
+        if (ext === "txt" || ext === "html") {
+          textInput.value = e.target.result.replace(/<[^>]*>/g, ''); // Strip HTML if needed
+        } else if (ext === "docx") {
+          mammoth.extractRawText({ arrayBuffer: e.target.result }).then(result => {
+            textInput.value = result.value;
+          });
+        }
+      };
+
+      if (ext === "docx") {
+        reader.readAsArrayBuffer(file);
+      } else {
+        reader.readAsText(file);
+      }
+    }
+
+    function analyzeText() {
+      const rawText = textInput.value.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+      const words = rawText.split(/\s+/).filter(Boolean);
+      const totalWords = words.length;
+
+      const frequency = {};
+      words.forEach(word => {
+        frequency[word] = (frequency[word] || 0) + 1;
+      });
+
+      const sorted = Object.entries(frequency).sort((a, b) => b[1] - a[1]);
+
+      let html = `<table><thead><tr><th>Keyword</th><th>Count</th><th>Density (%)</th></tr></thead><tbody>`;
+      sorted.forEach(([word, count]) => {
+        const density = ((count / totalWords) * 100).toFixed(2);
+        html += `<tr><td>${word}</td><td>${count}</td><td>${density}</td></tr>`;
+      });
+      html += `</tbody></table>`;
+      output.innerHTML = html;
+    }
+
+    function downloadResults() {
+      const blob = new Blob([output.innerHTML], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "keyword-density-result.html";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
